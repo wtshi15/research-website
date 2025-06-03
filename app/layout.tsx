@@ -23,18 +23,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <ProgressProvider>
-            <SidebarProvider defaultOpen={false}>
+            <SidebarProvider defaultOpen={true}>
               <div className="flex min-h-screen">
                 <AppSidebar />
-                <main className="flex-1 flex justify-center">
-                  <div className="w-full max-w-4xl px-4 py-6 md:px-6">{children}</div>
+                <main className="flex-1 flex items-start justify-center p-6 overflow-y-auto">
+                  <div className="w-full max-w-4xl">{children}</div>
                 </main>
               </div>
             </SidebarProvider>

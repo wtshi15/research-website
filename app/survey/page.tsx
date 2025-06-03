@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,34 +13,52 @@ import { useProgress } from "@/components/progress-provider"
 import { submitSurvey } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
+type SurveyOption = {
+  id: string
+  label: string
+  value: string
+}
+
 export default function SurveyPage() {
   const router = useRouter()
   const { markStepCompleted, setSessionId, setSurveyResponse } = useProgress()
+  const { toast } = useToast()
+
   const [newsSource, setNewsSource] = useState<string>("")
   const [otherSource, setOtherSource] = useState<string>("")
   const [showOtherInput, setShowOtherInput] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const { toast } = useToast()
+
+  // Content state
+  const [title, setTitle] = useState("Initial Survey")
+  const [description, setDescription] = useState(
+    "Please answer the following question about your news consumption habits."
+  )
+  const [questionLabel, setQuestionLabel] = useState("What is your favorite source of news?")
+  const [options, setOptions] = useState<SurveyOption[]>([
+    { id: "cnn", label: "CNN", value: "CNN" },
+    { id: "fox", label: "FOX", value: "FOX" },
+    { id: "twitter", label: "Twitter", value: "Twitter" },
+    { id: "tiktok", label: "TikTok", value: "TikTok" },
+    { id: "other", label: "Other", value: "Other" },
+  ])
+  const [otherLabel, setOtherLabel] = useState("Please specify:")
+  const [otherPlaceholder, setOtherPlaceholder] = useState("Enter your news source")
 
   useEffect(() => {
-    // Check if there's a stored submission
-    const stored = localStorage.getItem("submittedSurvey")
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored)
-        setNewsSource(parsed.newsSource)
-        setOtherSource(parsed.otherSource || "")
-        setShowOtherInput(parsed.newsSource === "Other")
-        setIsSubmitted(true)
-      } catch (err) {
-        console.error("Failed to parse stored survey data:", err)
-      }
+    const savedContent = localStorage.getItem("adminSurveyContent")
+    if (savedContent) {
+      const content = JSON.parse(savedContent)
+      setTitle(content.title || title)
+      setDescription(content.description || description)
+      setQuestionLabel(content.questionLabel || questionLabel)
+      setOptions(content.options || options)
+      setOtherLabel(content.otherLabel || otherLabel)
+      setOtherPlaceholder(content.otherPlaceholder || otherPlaceholder)
     }
   }, [])
 
   const handleNewsSourceChange = (value: string) => {
-    if (isSubmitted) return
     setNewsSource(value)
     setShowOtherInput(value === "Other")
   }
@@ -52,28 +70,17 @@ export default function SurveyPage() {
     try {
       const finalSource = newsSource === "Other" ? otherSource : newsSource
 
-      // Submit to backend API
       const result = await submitSurvey(newsSource, newsSource === "Other" ? otherSource : undefined)
 
-      // Store session ID for future API calls
       setSessionId(result.session_id)
-
-      // Store the survey response for reference
       setSurveyResponse(finalSource)
 
-      // Persist the submission
-      localStorage.setItem(
-        "submittedSurvey",
-        JSON.stringify({
-          newsSource,
-          otherSource: newsSource === "Other" ? otherSource : null,
-        })
-      )
+      localStorage.setItem("submittedSurvey", JSON.stringify({
+        newsSource,
+        otherSource: newsSource === "Other" ? otherSource : null,
+      }))
 
-      // Mark this step as completed
       markStepCompleted("survey")
-
-      // Navigate to the chat page
       router.push("/chat")
     } catch (error) {
       console.error("Error submitting survey:", error)
@@ -88,16 +95,16 @@ export default function SurveyPage() {
   }
 
   return (
-    <Card className="mt-10">
+    <Card className="w-full max-w-2xl mx-auto mt-10">
       <CardHeader>
-        <CardTitle>Initial Survey</CardTitle>
-        <CardDescription>Please answer the following question about your news consumption habits.</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <Label htmlFor="news-source" className="text-base">
-              What is your favorite source of news?
+              {questionLabel}
             </Label>
             <RadioGroup
               id="news-source"
@@ -105,38 +112,23 @@ export default function SurveyPage() {
               onValueChange={handleNewsSourceChange}
               className="space-y-3"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="CNN" id="cnn" disabled={isSubmitted} />
-                <Label htmlFor="cnn">CNN</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="FOX" id="fox" disabled={isSubmitted} />
-                <Label htmlFor="fox">FOX</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Twitter" id="twitter" disabled={isSubmitted} />
-                <Label htmlFor="twitter">Twitter</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="TikTok" id="tiktok" disabled={isSubmitted} />
-                <Label htmlFor="tiktok">TikTok</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Other" id="other" disabled={isSubmitted} />
-                <Label htmlFor="other">Other</Label>
-              </div>
+              {options.map((option) => (
+                <div key={option.id} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option.value} id={option.id} />
+                  <Label htmlFor={option.id}>{option.label}</Label>
+                </div>
+              ))}
             </RadioGroup>
 
             {showOtherInput && (
               <div className="pt-2">
-                <Label htmlFor="other-source">Please specify:</Label>
+                <Label htmlFor="other-source">{otherLabel}</Label>
                 <Input
                   id="other-source"
                   value={otherSource}
                   onChange={(e) => setOtherSource(e.target.value)}
                   className="mt-1"
-                  placeholder="Enter your news source"
-                  disabled={isSubmitted}
+                  placeholder={otherPlaceholder}
                 />
               </div>
             )}
@@ -145,12 +137,7 @@ export default function SurveyPage() {
         <CardFooter className="flex justify-between">
           <Button
             type="submit"
-            disabled={
-              isSubmitted ||
-              isSubmitting ||
-              !newsSource ||
-              (newsSource === "Other" && !otherSource)
-            }
+            disabled={isSubmitting || !newsSource || (newsSource === "Other" && !otherSource)}
           >
             {isSubmitting ? "Submitting..." : "Next"}
           </Button>

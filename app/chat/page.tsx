@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -18,12 +17,23 @@ type Message = {
   content: string
 }
 
+type ChatMessage = {
+  id: string
+  content: string
+  turnNumber: number
+}
+
 export default function ChatPage() {
   const hasInitialized = useRef(false)
-
   const router = useRouter()
   const { toast } = useToast()
-  const { markStepCompleted, sessionId, surveyResponse, chatHistory, addChatMessage } = useProgress()
+  const {
+    markStepCompleted,
+    sessionId,
+    surveyResponse,
+    chatHistory,
+    addChatMessage,
+  } = useProgress()
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -31,7 +41,28 @@ export default function ChatPage() {
   const [turnCount, setTurnCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Redirect if no session ID or survey response
+  // Admin content state
+  const [title, setTitle] = useState("Chat with our AI Assistant")
+  const [description, setDescription] = useState(
+    "Please engage in a brief conversation about your news consumption habits.",
+  )
+  const [initialMessage, setInitialMessage] = useState(
+    "What is your favorite part about getting your news from {newsSource}?",
+  )
+  const [maxTurns, setMaxTurns] = useState(3)
+  const [finalMessage, setFinalMessage] = useState(
+    "Thank you for sharing your thoughts! We've completed this part of the study. Let's move on to the next section.",
+  )
+  const [aiMessages, setAiMessages] = useState<ChatMessage[]>([
+    { id: "msg-1", content: "That's interesting! How often do you consume news from {newsSource}?", turnNumber: 1 },
+    {
+      id: "msg-2",
+      content: "Do you think {newsSource} provides balanced coverage of important topics?",
+      turnNumber: 2,
+    },
+  ])
+
+  // Redirect if no session or survey
   useEffect(() => {
     if (!sessionId || !surveyResponse) {
       toast({
@@ -43,11 +74,22 @@ export default function ChatPage() {
     }
   }, [sessionId, surveyResponse, router, toast])
 
-  // Initialize messages
+  // Load content & initialize messages
   useEffect(() => {
-    if (hasInitialized.current) return
+    if (!surveyResponse || hasInitialized.current) return
     hasInitialized.current = true
-  
+
+    const savedContent = localStorage.getItem("adminChatContent")
+    if (savedContent) {
+      const content = JSON.parse(savedContent)
+      setTitle(content.title || title)
+      setDescription(content.description || description)
+      setInitialMessage(content.initialMessage || initialMessage)
+      setMaxTurns(content.maxTurns || maxTurns)
+      setFinalMessage(content.finalMessage || finalMessage)
+      setAiMessages(content.messages || aiMessages)
+    }
+
     if (chatHistory.length > 0) {
       setMessages(
         chatHistory.map((msg) => ({
@@ -56,19 +98,17 @@ export default function ChatPage() {
         }))
       )
       setTurnCount(Math.floor(chatHistory.length / 2))
-    } else if (surveyResponse) {
-      const initialMessage = {
-        role: "assistant",
-        content: `What is your favorite part about getting your news from ${surveyResponse}?`,
-      }
-      setMessages([initialMessage])
-      addChatMessage("assistant", initialMessage.content)
+    } else {
+      const formattedInitial = (savedContent
+        ? JSON.parse(savedContent).initialMessage
+        : initialMessage
+      ).replace(/{newsSource}/g, surveyResponse)
+      setMessages([{ role: "assistant", content: formattedInitial }])
+      addChatMessage("assistant", formattedInitial)
     }
   }, [surveyResponse, chatHistory, addChatMessage])
-  
 
   useEffect(() => {
-    // Scroll to bottom whenever messages change
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
@@ -76,7 +116,6 @@ export default function ChatPage() {
     e.preventDefault()
     if (!input.trim() || !sessionId) return
 
-    // Add user message
     const userMessage: Message = { role: "user", content: input }
     setMessages((prev) => [...prev, userMessage])
     addChatMessage("user", input)
@@ -84,13 +123,10 @@ export default function ChatPage() {
     setIsLoading(true)
 
     try {
-      // Send message to backend
       const response = await sendChatMessage(sessionId, input)
-
       const newTurnCount = turnCount + 1
       setTurnCount(newTurnCount)
 
-      // Add assistant response
       const assistantMessage: Message = {
         role: "assistant",
         content: response.response,
@@ -98,8 +134,7 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, assistantMessage])
       addChatMessage("assistant", response.response)
 
-      // If we've reached the end of the conversation (3-5 turns), enable the next button
-      if (newTurnCount >= 3) {
+      if (newTurnCount >= maxTurns) {
         markStepCompleted("chat")
         setTimeout(() => {
           router.push("/survey-2")
@@ -120,24 +155,18 @@ export default function ChatPage() {
   return (
     <Card className="w-full max-w-3xl mx-auto mt-10 h-[600px] flex flex-col">
       <CardHeader>
-        <CardTitle>Chat with our AI Assistant</CardTitle>
-        <CardDescription>Please engage in a brief conversation about your news consumption habits.</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">
         <div className="space-y-4">
           {messages.map((message, index) => (
             <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`flex items-start gap-2 max-w-[80%] ${message.role === "user" ? "flex-row-reverse" : ""}`}
-              >
+              <div className={`flex items-start gap-2 max-w-[80%] ${message.role === "user" ? "flex-row-reverse" : ""}`}>
                 <Avatar className={message.role === "user" ? "bg-primary" : "bg-muted"}>
                   <AvatarFallback>{message.role === "user" ? "U" : "AI"}</AvatarFallback>
                 </Avatar>
-                <div
-                  className={`rounded-lg px-4 py-2 ${
-                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                  }`}
-                >
+                <div className={`rounded-lg px-4 py-2 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                   {message.content}
                 </div>
               </div>
@@ -168,10 +197,10 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            disabled={isLoading || turnCount >= 3}
+            disabled={isLoading || turnCount >= maxTurns}
             className="flex-1"
           />
-          <Button type="submit" size="icon" disabled={isLoading || !input.trim() || turnCount >= 3}>
+          <Button type="submit" size="icon" disabled={isLoading || !input.trim() || turnCount >= maxTurns}>
             <Send className="h-4 w-4" />
           </Button>
         </form>
