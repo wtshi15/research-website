@@ -1,6 +1,7 @@
 $projectRoot = $PSScriptRoot
 Set-Location $projectRoot
-$uvicornPath = "$env:USERPROFILE\AppData\Roaming\Python\Python313\Scripts\uvicorn.exe"
+# $uvicornPath = "$env:USERPROFILE\AppData\Roaming\Python\Python313\Scripts\uvicorn.exe"
+$uvicornPath = "$env:USERPROFILE\appdata\local\programs\python\python312\scripts\uvicorn.exe"
 $pidFile = "$projectRoot\.pids"
 $envFile = "$projectRoot\.env.local"
 
