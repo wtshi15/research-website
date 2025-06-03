@@ -1,7 +1,5 @@
 $projectRoot = $PSScriptRoot
 Set-Location $projectRoot
-# $uvicornPath = "$env:USERPROFILE\AppData\Roaming\Python\Python313\Scripts\uvicorn.exe"
-$uvicornPath = "$env:USERPROFILE\appdata\local\programs\python\python312\scripts\uvicorn.exe"
 $pidFile = "$projectRoot\.pids"
 $envFile = "$projectRoot\.env.local"
 
@@ -19,13 +17,9 @@ Write-Host "Set .env.local to use localhost backend."
 $ollama = Start-Process powershell -ArgumentList "cd `"$projectRoot`"; ollama run qwen:0.5b; pause" -WindowStyle Normal -PassThru
 "ollama $($ollama.Id)" | Out-File -Append -FilePath $pidFile
 
-# Start Backend
-if (Test-Path $uvicornPath) {
-    $backend = Start-Process powershell -ArgumentList "cd `"$projectRoot`"; & `"$uvicornPath`" backend.main:app --reload; pause" -WindowStyle Normal -PassThru
-    "backend $($backend.Id)" | Out-File -Append -FilePath $pidFile
-} else {
-    Write-Host "Uvicorn not found. Backend not started."
-}
+# Start Backend using python -m uvicorn to ensure compatibility across workstations
+$backend = Start-Process powershell -ArgumentList "cd `"$projectRoot`"; python -m uvicorn backend.main:app --reload; pause" -WindowStyle Normal -PassThru
+"backend $($backend.Id)" | Out-File -Append -FilePath $pidFile
 
 # Start Frontend
 $frontend = Start-Process powershell -ArgumentList "cd `"$projectRoot`"; npm run dev; pause" -WindowStyle Normal -PassThru
