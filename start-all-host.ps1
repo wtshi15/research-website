@@ -1,13 +1,12 @@
+$backendEnabled = $true  # Set to $false to only start the frontend
+
 $projectRoot = $PSScriptRoot
 Set-Location $projectRoot
-$uvicornPath = "$env:USERPROFILE\AppData\Roaming\Python\Python313\Scripts\uvicorn.exe"
-$pidFile = "$projectRoot\.pids"
 $envFile = "$projectRoot\.env.local"
+$frontendDomain = "hopefully-ultimate-raven.ngrok-free.app"
 
-# First, check default path for ngrok
+# Check for ngrok
 $ngrokPath = "$env:USERPROFILE\ngrok\ngrok.exe"
-
-# If not found, try PATH
 if (-not (Test-Path $ngrokPath)) {
     $ngrokCommand = Get-Command ngrok.exe -ErrorAction SilentlyContinue
     if ($ngrokCommand) {
@@ -17,56 +16,47 @@ if (-not (Test-Path $ngrokPath)) {
     }
 }
 
-# Clear old PID file
-if (Test-Path $pidFile) {
-    Remove-Item $pidFile
-}
+if ($backendEnabled) {
+    # Default fallback
+    $envLine = "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000"
+    Set-Content -Path $envFile -Value $envLine
+    Write-Host "Set .env.local to use localhost backend."
 
-# Start backend ngrok (ephemeral, port 8000)
-if ($ngrokPath -and (Test-Path $ngrokPath)) {
-    $ngrokBackend = Start-Process -FilePath $ngrokPath -ArgumentList "http 8000" -WindowStyle Normal -PassThru
-    "ngrok-backend $($ngrokBackend.Id)" | Out-File -Append -FilePath $pidFile
+    # Start backend ngrok (ephemeral)
+    if ($ngrokPath -and (Test-Path $ngrokPath)) {
+        Start-Process -FilePath $ngrokPath -ArgumentList "http 8000" -WindowStyle Normal
+        Start-Sleep -Seconds 6
 
-    # Wait for ngrok to start and provide URL
-    Start-Sleep -Seconds 6
+        try {
+            $response = Invoke-RestMethod -Uri "http://127.0.0.1:4040/api/tunnels"
+            $backendTunnel = $response.tunnels | Where-Object { $_.config.addr -match "8000" }
+            $backendUrl = $backendTunnel.public_url
+            Write-Host "`nBackend ngrok URL: $backendUrl"
 
-    try {
-        $response = Invoke-RestMethod -Uri "http://127.0.0.1:4040/api/tunnels"
-        $backendTunnel = $response.tunnels | Where-Object { $_.config.addr -match "8000" }
-        $backendUrl = $backendTunnel.public_url
-
-        Write-Host "`nBackend ngrok URL: $backendUrl"
-
-        # Ensure .env.local exists and overwrite it with latest backend URL
-        $envLine = "NEXT_PUBLIC_API_BASE_URL=$backendUrl"
-        Set-Content -Path $envFile -Value $envLine
-        Write-Host "Created or updated .env.local with backend URL."
-    } catch {
-        Write-Host "Failed to retrieve backend ngrok URL."
+            $envLine = "NEXT_PUBLIC_API_BASE_URL=$backendUrl"
+            Set-Content -Path $envFile -Value $envLine
+            Write-Host "Updated .env.local with backend ngrok URL."
+        } catch {
+            Write-Host "Failed to retrieve backend ngrok URL. Using localhost."
+        }
+    } else {
+        Write-Host "ngrok.exe not found in default location or system PATH. Using localhost."
     }
-} else {
-    Write-Host "ngrok.exe not found in default location or system PATH."
+
+    # Start Ollama
+    Start-Process powershell -ArgumentList "cd `"$projectRoot`"; ollama run qwen:0.5b; pause" -WindowStyle Normal
+
+    # Start Backend
+    Start-Process powershell -ArgumentList "cd `"$projectRoot`"; python -m uvicorn backend.main:app --reload; pause" -WindowStyle Normal
 }
 
 # Start frontend ngrok with static domain
-$frontendDomain = "hopefully-ultimate-raven.ngrok-free.app"
-$ngrokFrontend = Start-Process powershell -ArgumentList "`"$ngrokPath`" http --domain=$frontendDomain 3000; pause" -WindowStyle Normal -PassThru
-"ngrok-frontend $($ngrokFrontend.Id)" | Out-File -Append -FilePath $pidFile
-
-# Start Ollama
-$ollama = Start-Process powershell -ArgumentList "cd `"$projectRoot`"; ollama run qwen:0.5b; pause" -WindowStyle Normal -PassThru
-"ollama $($ollama.Id)" | Out-File -Append -FilePath $pidFile
-
-# Start Backend
-if (Test-Path $uvicornPath) {
-    $backend = Start-Process powershell -ArgumentList "cd `"$projectRoot`"; & `"$uvicornPath`" backend.main:app --reload; pause" -WindowStyle Normal -PassThru
-    "backend $($backend.Id)" | Out-File -Append -FilePath $pidFile
-} else {
-    Write-Host "Uvicorn not found. Backend not started."
+if ($ngrokPath) {
+    Start-Process powershell -ArgumentList "`"$ngrokPath`" http --domain=$frontendDomain 3000; pause" -WindowStyle Normal
+    Write-Host "`nFrontend ngrok domain started at: https://$frontendDomain"
 }
 
 # Start Frontend
-$frontend = Start-Process powershell -ArgumentList "cd `"$projectRoot`"; npm run dev; pause" -WindowStyle Normal -PassThru
-"frontend $($frontend.Id)" | Out-File -Append -FilePath $pidFile
+Start-Process powershell -ArgumentList "cd `"$projectRoot`"; npm run dev; pause" -WindowStyle Normal
 
 Write-Host "`nAll services started. Frontend: https://$frontendDomain"

@@ -2,7 +2,6 @@ $projectRoot = $PSScriptRoot
 Set-Location $projectRoot
 $envFile = "$projectRoot\.env.local"
 
-# Always overwrite .env.local with localhost API base
 $envLine = "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000"
 Set-Content -Path $envFile -Value $envLine
 Write-Host "Set .env.local to use localhost backend."
@@ -17,14 +16,3 @@ Start-Process powershell -ArgumentList "cd `"$projectRoot`"; python -m uvicorn b
 Start-Process powershell -ArgumentList "cd `"$projectRoot`"; npm run dev; pause" -WindowStyle Normal
 
 Write-Host "`nAll services started."
-
-<#
-rd /s /q .next
-rd /s /q node_modules
-del package-lock.json
-npm cache clean --force
-
-npm install --legacy-peer-deps
-
-npm run dev
-#>
