@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Follow-up Survey - Research Project</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">Research Project</h2>
+      </div>
+      <div class="sidebar-content">
+        <nav class="sidebar-menu">
+          <ul>
+            <li class="sidebar-menu-item">
+              <a href="index.html" class="sidebar-menu-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>Home</span>
+              </a>
+            </li>
+            <li class="sidebar-menu-item" id="survey-menu-item">
+              <a href="survey.html" class="sidebar-menu-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="m9 11 3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                <span>Initial Survey</span>
+              </a>
+            </li>
+            <li class="sidebar-menu-item" id="chat-menu-item">
+              <a href="chat.html" class="sidebar-menu-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Chat</span>
+              </a>
+            </li>
+            <li class="sidebar-menu-item active" id="survey2-menu-item">
+              <a href="survey-2.html" class="sidebar-menu-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="m9 11 3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                <span>Follow-up Survey</span>
+              </a>
+            </li>
+            <li class="sidebar-menu-item disabled" id="thankyou-menu-item">
+              <span class="sidebar-menu-button disabled">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M7 10v12"></path><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path></svg>
+                <span>Thank You</span>
+              </span>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </aside>
+    <main class="main-content">
+      <div class="content-container">
+        <div class="card survey-card">
+          <div class="card-header">
+            <h2 class="card-title">Follow-up Survey</h2>
+            <p class="card-description">Please share your thoughts about your experience with our AI assistant.</p>
+          </div>
+          <form id="survey2-form" class="survey-form">
+            <div class="card-content">
+              <div class="form-group">
+                <label for="satisfaction" class="form-label">How satisfied were you with the conversation?</label>
+                <div class="radio-group">
+                  <div class="radio-item">
+                    <input type="radio" id="very-satisfied" name="satisfaction" value="very-satisfied" class="radio-input">
+                    <label for="very-satisfied" class="radio-label">Very Satisfied</label>
+                  </div>
+                  <div class="radio-item">
+                    <input type="radio" id="satisfied" name="satisfaction" value="satisfied" class="radio-input">
+                    <label for="satisfied" class="radio-label">Satisfied</label>
+                  </div>
+                  <div class="radio-item">
+                    <input type="radio" id="neutral" name="satisfaction" value="neutral" class="radio-input">
+                    <label for="neutral" class="radio-label">Neutral</label>
+                  </div>
+                  <div class="radio-item">
+                    <input type="radio" id="dissatisfied" name="satisfaction" value="dissatisfied" class="radio-input">
+                    <label for="dissatisfied" class="radio-label">Dissatisfied</label>
+                  </div>
+                  <div class="radio-item">
+                    <input type="radio" id="very-dissatisfied" name="satisfaction" value="very-dissatisfied" class="radio-input">
+                    <label for="very-dissatisfied" class="radio-label">Very Dissatisfied</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="feedback" class="form-label">Do you have any additional feedback about your experience?</label>
+                <textarea id="feedback" class="textarea" placeholder="Share your thoughts here..." rows="4"></textarea>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button type="submit" id="survey2-submit" class="button primary" disabled>Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      initSurvey2Page();
+    });
+  </script>
+</body>
+</html>

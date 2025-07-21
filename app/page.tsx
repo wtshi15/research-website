@@ -1,103 +1,112 @@
-import Image from "next/image";
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
+import { useEffect, useState } from "react"
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [title, setTitle] = useState("Research Project")
+  const [subtitle, setSubtitle] = useState("Understanding News Consumption Patterns")
+  const [aboutTitle, setAboutTitle] = useState("About This Study")
+  const [aboutDescription, setAboutDescription] = useState("Learn about the purpose and goals of our research")
+  const [aboutContent, setAboutContent] = useState([
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc quis nisl. Nullam euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc quis nisl.",
+    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+    "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.",
+  ])
+  const [processTitle, setProcessTitle] = useState("Participation Process")
+  const [processDescription, setProcessDescription] = useState("What to expect during this study")
+  const [processContent, setProcessContent] = useState(
+    "The entire process should take approximately 10-15 minutes to complete. Your responses will be kept confidential and used only for research purposes.",
+  )
+  const [privacyText, setPrivacyText] = useState(
+    "I agree to participate in this research study and consent to the collection and use of my responses for research purposes. I understand that my data will be kept confidential and used only for academic research."
+  )
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    // Load content from localStorage if available
+    const savedContent = localStorage.getItem("adminHomeContent")
+    if (savedContent) {
+      const content = JSON.parse(savedContent)
+      setTitle(content.title || title)
+      setSubtitle(content.subtitle || subtitle)
+      setAboutTitle(content.aboutTitle || aboutTitle)
+      setAboutDescription(content.aboutDescription || aboutDescription)
+      setAboutContent(content.aboutContent || aboutContent)
+      setProcessTitle(content.processTitle || processTitle)
+      setProcessDescription(content.processDescription || processDescription)
+      setProcessContent(content.processContent || processContent)
+      setPrivacyText(content.privacyText || privacyText)
+    }
+  }, [])
+
+  return (
+    <div className="w-full max-w-4xl mx-auto space-y-8 mt-10">
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
+        <p className="text-xl text-muted-foreground">{subtitle}</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{aboutTitle}</CardTitle>
+          <CardDescription>{aboutDescription}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {aboutContent.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{processTitle}</CardTitle>
+          <CardDescription>{processDescription}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p>This study consists of the following steps:</p>
+          <ol className="list-decimal list-inside space-y-2 pl-4">
+            <li>Complete a brief survey about your news consumption habits</li>
+            <li>Engage in a short conversation with our AI assistant</li>
+            <li>Complete a follow-up survey about your experience</li>
+          </ol>
+          <p>{processContent}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Consent to Participate</CardTitle>
+          <CardDescription>Please read and agree to the following before proceeding</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-muted rounded-lg">
+            <p className="text-sm">{privacyText}</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="privacy-consent" 
+              checked={agreedToPrivacy}
+              onCheckedChange={(checked) => setAgreedToPrivacy(checked as boolean)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <Label htmlFor="privacy-consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              I agree to the terms above and consent to participate in this research study
+            </Label>
+          </div>
+          <div className="pt-4">
+            <Link href="/survey">
+              <Button size="lg" disabled={!agreedToPrivacy}>
+                Begin Participation
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 }
