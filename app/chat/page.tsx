@@ -116,6 +116,36 @@ export default function ChatPage() {
                 `Thank you for your response. Do you have any other thoughts about ${newsSource}?`
     }
 
+     // Note: To switch to OpenAI/chatgpt responses, create app/api/ai/route.ts (see below),
+      // add OPENAI_API_KEY to .env.local, install the SDK with: `npm i openai`,
+      // then uncomment this following block. This will replace `response` above.
+      // this works by just making a fetch request with the whole content to chatgpt.
+
+    //   try {
+    //     const aiRes = await fetch("/api/ai", {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       body: JSON.stringify({
+    //         // send recent context; trim to last 10 messages to keep tokens low
+    //         messages: chatLog.slice(-10).map(m => ({ role: m.role, content: m.content }))
+    //       }),
+    //     })
+
+    //     if (aiRes.ok) {
+    //       const data = await aiRes.json()
+    //       // fall back to predefined if empty
+    //       response = data.reply || response
+    //     } else {
+    //       console.error("AI route error:", await aiRes.text())
+    //     }
+    //   } catch (err) {
+    //     console.error("AI fetch failed:", err)
+    //   }
+    //   // ================================
+    // 
+    // }
+
+
     // Simulate loading delay
     setTimeout(() => {
       const assistantMessage: Message = { 
